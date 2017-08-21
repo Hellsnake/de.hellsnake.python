@@ -3,32 +3,34 @@ import visa
 import time
 
 def main():
-	tries = 1
-	stdout = sys.stdout
 	rm = visa.ResourceManager()
-	resourceList = rm.list_resources()
-	dev = rm.open_resource(resourceList[0], send_end=True, query_delay = 1.0)
 	checksum = ChecksumBuffer()
-	command = "DC;"
+	command = str()
 	response = ''	
-	cs = checksum.get(command)
-	command = command + cs + "\n"
+	command_string_error = "RR,15;"
 
+	resourceList = rm.list_resources()
+	dev = rm.open_resource(resourceList[0])
 
 	dev.encoding = 'cp437'
+	#dev.chunksize = 10200;
 
-	print("{0:s}".format(command))
-	response = dev.query(command)
+	command = "DC;" + checksum.get("DC;") + "\n"
+	#print("Sending command '{0:s}' to device".format(command))
+	dev.write(command )
+	response = dev.read()
 
-	while "VDS" not in response and tries <= 10:
-		dev.write(command)
-		response = dev.read()
-		stdout.write("Versuch {0:d}, Response: {1:s}\r".format(tries, response))
-		stdout.flush()
-		tries = tries + 1
-		time.sleep(2)
+	#while command_string_error in response:
+	dev.write(command)
+	time.sleep(4)
+	response = dev.read()
+	print("{0:s}".format(response))
 
-	print(response)
+	# command = "BW;" + checksum.get("BW;")
+	# print("Sending command '{0:s}' to device".format(command))
+	# dev.write(command)
+	# response = dev.read()
+	# print("{0:s}".format(response))
 
 	dev.close()
 
