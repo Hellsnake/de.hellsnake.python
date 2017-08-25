@@ -22,6 +22,8 @@ def main():
 	if device_resourceid not in resourceList:
 		print("Teilnehmer {0:s} wurde nicht am GPIB gefunden.".format(device_resourceid))
 		device_resourceid = VisaHelper.selectResource()
+		#if(not device_resourceid):
+			#exit(1)
 
 	dev = rm.open_resource(device_resourceid)
 	# Resourcennamen für GPIB oder Serial
@@ -50,6 +52,8 @@ def main():
 	dev.write(command)
 	if res_class == 'GPIBInstrument':
 		dev.wait_for_srq()
+	else:
+		time.sleep(2.5)
 	response = dev.read()
 	print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
 
@@ -64,21 +68,45 @@ def main():
 	dev.write(command)
 	if res_class == 'GPIBInstrument':
 		dev.wait_for_srq()
+	else:
+		time.sleep(2.5)
 	response = dev.read()
+	while response == VDSResponse.RESPONSE_ERR_TEST_ON:
+		inp = str()
+		inp = input('"Test On" ist nicht gedrückt!"')
+		dev.write(command)
+		if res_class == 'GPIBInstrument':
+			dev.wait_for_srq()
+		else:
+			time.sleep(2.5)
+		response = dev.read()
 	print("Request an {dev:20} Response".format(dev=device_resourceid))
 	print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
-	if response == VDSResponse.RESPONSE_ERR_TEST_ON:
-		print('"Test On" ist nicht gedrückt!"')
+
+
+	command = getImpuls2b + checksum.get(command)
+	dev.write(command)
+	if res_class == 'GPIBInstrument':
+		dev.wait_for_srq()
+	else:
+		time.sleep(2.5)
+	response = dev.read()
+	print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
+
 
 	dev.close()
 
-	
 
-	#print(checksum.get('BW;'))
-
-def getImpuls2b(param = {'Ub':135, 'Ua1':10, 't1':1, 't6':1, 'td':200, 'Int':1, 'n':10, 'I':1}):
+#
+def getImpuls2b(parameters = {'Ub':135, 'Ua1':10, 't1':1, 't6':1, 'td':200, 'Int':1, 'n':10, 'I':1}):
 	set_impulse2b_command = 'DA,Ub,Ua1,t1,t6,td,Int,n,tri,I;'
 	impuls2b_default = {'Ub':135, 'Ua1':10, 't1':1, 't6':1, 'td':200, 'Int':1, 'n':10, 'I':1}
+	command = str()
+
+	for key, value in parameters:
+		set_impulse2b_command = set_impulse2b_command.replace(key, value)
+
+	return set_impulse2b_command
 
 class ChecksumBuffer:
 
@@ -88,25 +116,26 @@ class ChecksumBuffer:
 
 	def _add(self, value):
 		bytelist = value.encode('cp437')
-
+		bytecount = len(value)
 		# Summiere alle Dezimalwerte der Zeichen
 		sum = 0;
 		for b in bytelist:
 			sum = sum + b
-		#print(sum)
+		print('Sum {sum:d}'.format(sum = sum))
 		
 
 		# Offset als int (Hexadezimal = 100H) - errechnet Wert als int
-		result = int.from_bytes(self._offset, byteorder = 'big') - sum.to_bytes(2, byteorder='big')[1]
+		result = int.from_bytes(self._offset, byteorder = 'little', signed = False) - sum.to_bytes(2, byteorder = 'little', signed = False)[0]
 
 		if result == 0:
 			result = result + 256
 		elif result == 10:
 			result = result + 266
 
-		#print(result)
-		c = result.to_bytes(1, byteorder = 'big', signed=False)
-
+		print('result: {result:d}'.format(result = result))
+		c = result.to_bytes(1, byteorder = 'little', signed=False)
+		print(type(c))
+		print(c)
 		self._listOfChecksums[value] = c
 		c = c.decode('cp437')
 
@@ -156,7 +185,8 @@ class VisaHelper:
 
 		while selection < 0 and selection > len(res_list) - 1 and not selection == 200:
 			selection = int(input("Resource auswählen: "))
-			return res_list[selection]			
+			
+		return res_list[selection]			
 
 if __name__ == '__main__':
     main()
