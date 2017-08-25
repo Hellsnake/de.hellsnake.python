@@ -112,7 +112,7 @@ class ChecksumBuffer:
 
 	def __init__(self):
 		self._listOfChecksums = {}
-		self._offset = b'\x01\x00'
+		self._offset = b'\x00\x01'
 
 	def _add(self, value):
 		bytelist = value.encode('cp437')
@@ -126,7 +126,8 @@ class ChecksumBuffer:
 
 		# Offset als int (Hexadezimal = 100H) - errechnet Wert als int
 		result = int.from_bytes(self._offset, byteorder = 'little', signed = False) - sum.to_bytes(2, byteorder = 'little', signed = False)[0]
-
+		print('result: {result:d}'.format(result = result))
+		
 		if result == 0:
 			result = result + 256
 		elif result == 10:
