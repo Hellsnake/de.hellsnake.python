@@ -16,9 +16,11 @@ class TestParameter(object):
 def main():
 	visa_dev = object
 	current_field_raise = 75
+	magnetic_resistance = 0.15
+	source_multiplier = 5.6
 	params = dict()
-	start_voltage = float(input('Startausgangsspannung [V]:'))
-	end_voltage = float(input('Endspannung [V]: '))
+	start_magneticfield = float(input('Startmagnetfeldstärke [A/m]:'))
+	end_magneticfield = float(input('Endmagnetfeldstärke [A/m]: '))
 	dc_offset = float(input('DC-Offset [V]: '))
 	start_frequency = float(input('Startfrequenz [Hz]: '))
 	stop_frequency = float(input('Stopfrequenz [Hz]: '))
@@ -29,8 +31,8 @@ def main():
 	start_time = 0
 	end_time = 0
 
-	params['start_voltage'] = start_voltage
-	params['end_voltage'] = end_voltage
+	params['start_magneticfield'] = start_magneticfield
+	params['end_magneticfield'] = end_magneticfield
 	params['dc_offset'] = dc_offset
 	params['start_frequency'] = start_frequency
 	params['stop_frequency'] = stop_frequency
@@ -45,10 +47,16 @@ def main():
 	print('\n' + ''.center(100, '-'))
 
 	visa_dev = getDevice()
-	print(visa_dev.query("*IDN?"))
+	response = visa_dev.query("*IDN?")
+	if '33250A' not in response:
+		print('Bei dem Gerät handelt es sich nicht um ein Agilent 33250A, sondern um das {0:s}\n'.format(response))
+		exit()
+
+	print('VISA-Gerät: {0:s}\n'.format(response))
+
 	print(''.center(100, '-'))
 
-	answer = str(input('Vorgang starten?[j/n]?'))
+	answer = str(input('Vorgang starten?[j[or press Enter]/n]?'))
 
 	if answer == 'n' or answer == 'N':
 		print('Beende...')
@@ -66,8 +74,12 @@ def main():
 	
 	counter = params['start_frequency']
 	start_time = time.time()
+	start_voltage = ((params['start_magneticfield'] / current_field_raise) * magnetic_resistance) / source_multiplier
+	offset = start_voltage * 1.41
+	print('Setze den Ausgangswiderstand auf 10 kohm\n')
+	visa_dev.write('OUTP:LOAD 10000')
 	while  counter <= params['stop_frequency']:
-		visa_dev.write('APPL:SIN {freq} HZ, {start_voltage} VPP, 0.0 V'.format(freq=counter, start_voltage = start_voltage))
+		visa_dev.write('APPL:SIN {freq} HZ, {start_voltage} Vrms, {offset} V'.format(freq=counter, start_voltage = start_voltage, offset = offset))
 		#visa_dev.write('DISP:TEXT' + '"Testspannung: ' + str(counter) + '"')
 		counter = counter + params['step_size']
 		time.sleep(params['dwell_time'])
