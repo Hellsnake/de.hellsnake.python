@@ -20,4 +20,4 @@ class Checksum:
 		return result.to_bytes(2, byteorder="big").decode(encoding)
 
 
-print(Checksum.getVDSChecksum("AA,CC,DD,BB,DD,F,FF;"))
+print(Checksum.getVDSChecksum("BS,1;"))

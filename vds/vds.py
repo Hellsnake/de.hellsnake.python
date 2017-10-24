@@ -84,14 +84,14 @@ def main():
 	print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
 
 
-	command = getImpuls2b + checksum.get(command)
-	dev.write(command)
-	if res_class == 'GPIBInstrument':
-		dev.wait_for_srq()
-	else:
-		time.sleep(2.5)
-	response = dev.read()
-	print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
+	#command = getImpuls2b + checksum.get(command)
+	#dev.write(command)
+	#if res_class == 'GPIBInstrument':
+	#	dev.wait_for_srq()
+	#else:
+	#	time.sleep(2.5)
+	#response = dev.read()
+	#print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
 
 
 	dev.close()
