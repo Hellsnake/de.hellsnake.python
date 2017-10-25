@@ -8,7 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_myfirstgui(object):
+class BaseGUI(object):
     def setupUi(self, myfirstgui):
         myfirstgui.setObjectName("myfirstgui")
         myfirstgui.resize(411, 247)
@@ -30,7 +30,7 @@ class Ui_myfirstgui(object):
         self.sendCommandBtn.setGeometry(QtCore.QRect(10, 40, 101, 23))
         self.sendCommandBtn.setObjectName("sendCommandBtn")
         self.responseLabel = QtWidgets.QLabel(myfirstgui)
-        self.responseLabel.setGeometry(QtCore.QRect(120, 300, 101, 192))
+        self.responseLabel.setGeometry(QtCore.QRect(120, 210, 101, 192))
         self.responseLabel.setObjectName("responseLabel")
         self.responseLabel.setText("Response:")
 

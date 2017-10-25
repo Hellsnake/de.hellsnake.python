@@ -1,0 +1,43 @@
+{
+	"general": {
+		"write_termination": "\n",
+		"read_termination": "\n",
+		"checksum": "true",
+		"visa_resource": "GPIB0::14::INSTR"
+	}
+
+	"functions": [
+
+		"id": {
+			"request": {
+				"value": "DC;",
+				"parameter": [
+				] 
+			}
+			"response": {
+				"success": "VDS200B1,0,000441,V 4.17a08,810,2147516399,50000,70,600,70;"
+				"fail": "RR,15;"
+			}
+		},
+
+		"blockchange": {
+			"request": {
+				"value": "BS<blocknumber>;"
+				"parameter": [
+					{
+						"name": "blocknumber",
+						"min_value": "0"
+						"max_value": "2"
+					}
+				]
+			}
+			"response": {
+				"success": ["BS,0;", "BS,1;", "BS,2"]
+			}
+		}
+
+
+	]
+	
+
+}

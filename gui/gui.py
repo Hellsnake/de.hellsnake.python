@@ -1,13 +1,13 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-from firstgui import Ui_myfirstgui
+from firstgui import BaseGUI
 import visa
  
-class MyFirstGuiProgram(Ui_myfirstgui):
+class MyFirstGuiProgram(BaseGUI):
 
 
 	def __init__(self, dialog):
-		Ui_myfirstgui.__init__(self)
+		BaseGUI.__init__(self)
 		self.setupUi(dialog)
 		self._visa_rm = visa.ResourceManager()
 		self._visa_list = self._visa_rm.list_resources()
@@ -28,7 +28,7 @@ class MyFirstGuiProgram(Ui_myfirstgui):
 		command = self.myTextInput.text()
 		response = str()
 
-		if len(command) == 0 or self.listWidget.selectedItems() == 0:
+		if len(command) == 0 or len(self.listWidget.selectedItems()) == 0:
 			return
 
 		visa_dev = self._visa_rm.open_resource(self.listWidget.selectedItems()[0].text())
@@ -37,6 +37,8 @@ class MyFirstGuiProgram(Ui_myfirstgui):
 		visa_dev.wait_for_srq()
 		response = visa_dev.read()
 		print("Response: {0:s}".format(response))
+		self.responseLabel.setText("Response: " + response)
+		self.responseLabel.adjustSize()
 		visa_dev.close()
 
  
