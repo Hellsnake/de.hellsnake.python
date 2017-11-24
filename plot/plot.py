@@ -7,20 +7,18 @@ import math
 def main():
 	plots = parse_values(pyperclip.paste())
 	ticks = create_ticks(plots[0].get_xvalues())
-	formatter0 = EngFormatter(places=1, sep=u"\N{THIN SPACE}")
+	#formatter0 = EngFormatter(unit='Hz')
 	fig, (ax0) = plt.subplots(nrows=1, figsize=(9.6, 7))
 	
-	
-	
 	ax0.set_xscale('log')
-	ax0.xaxis.set_major_formatter(formatter0)
+	#ax0.xaxis.set_major_formatter(formatter0)
 	
 	ax0.set_ylabel('Level [dbuV/m]')
-	ax0.set_xlabel('Frequency [MHz] ')
+	ax0.set_xlabel('Frequency')
 	ax0.grid(True)
 	#ax0.set_xlim(min(ticks), max(ticks))
 	ax0.set_xticks(ticks)
-	#plt.xlim(min(ticks), max(ticks))
+	plt.xlim(min(plots[0].get_xvalues()), max(plots[0].get_xvalues()))
 	#plt.xticks(ticks , ticks)
 
 	for plot in plots:
@@ -37,6 +35,9 @@ def parse_values(val):
 	y_val = list()
 	plots = list()
 	name = str()
+	row_index_x = int()
+	row_index_y = int()
+	row_index_name = int()
 
 	''' Seperate Rows '''
 	rows = val.split('\n')
@@ -44,29 +45,44 @@ def parse_values(val):
 	for row in range(0,len(rows) - 1):
 		# seperate columns and replace not necessary characters
 		column = rows[row].replace('\r', '').split('\t')
-		if(len(column) > 3 or len(column) < 2):
-			return ret
-		elif(len(column) == 3 and name != column[0]):
-			name = str(column[0])
+
+		if(len(column) > 3):
+			row_index_x = 2
+			row_index_y = 3
+			row_index_name = 0
+		elif(len(column) == 3):
+			row_index_x = 1
+			row_index_y = 2
+			row_index_name = 0
+		if(name != column[row_index_name]):
+			print(name)
+			name = str(column[row_index_name])
 			p = PlotLine(name)
 			plots.append(p)
-		p.add_xvalues(float(column[1].replace(',', '.')))
-		p.add_yvalues(float(column[2].replace(',', '.')))
+		x = column[row_index_x]
+		y = column[row_index_y]
 
+		if(bool(x.strip())):
+			print('x: {0:s}, y: {1:s}'.format(x, y))
+			p.add_xvalues(float(x.replace(',', '.')))
+			p.add_yvalues(float(y.replace(',', '.')))
+
+	print(plots[0].get_xvalues())
 	return plots
 		
 def create_ticks(vals):
-	max_val = int(max(vals))
-	min_val = int(min(vals))
+	max_val = max(vals)
+	min_val = min(vals)
 	i = min_val
 	ticks = list()
-	print('max: {0:d}, min: {1:d}'.format(max_val, min_val))
+	print('max: {0:4.2f}, min: {1:4.2f}'.format(max_val, min_val))
 	ticks.append(min_val)
 	ticks.append(max_val)
-	while i < max_val:
-		mult = int(str(math.log(i) / math.log(10))[0:1])
-		i = i + (mult * 20)
-		
+	step = (max_val - min_val) / (10 / math.log(max_val - min_val))
+	while(i < max_val):
+		i = i + step
+		if(i > 0):
+			i = round(i,0)
 		if(i > max_val):
 			break
 		ticks.append(i)

@@ -66,6 +66,7 @@ def main():
 	dev.write(command)
 	if res_class == 'GPIBInstrument':
 		dev.wait_for_srq()
+		pass
 	else:
 		time.sleep(2.5)
 	response = dev.read()
@@ -82,26 +83,26 @@ def main():
 	print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
 
 
-	# nextFunction = impulseSelection()
+	nextFunction = impulseSelection()
 
-	# command = nextFunction()
-	# command = command + checksum.get(command) + set_starttest_command + checksum.get(set_starttest_command)
-	# dev.write(command)
-	# if res_class == 'GPIBInstrument':
-	# 	dev.wait_for_srq()
-	# else:
-	# 	time.sleep(2.5)
-	# response = dev.read()
-	# print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
+	command = nextFunction()
+	command = command + checksum.get(command) + set_starttest_command + checksum.get(set_starttest_command)
+	dev.write(command)
+	if res_class == 'GPIBInstrument':
+		dev.wait_for_srq()
+	else:
+		time.sleep(2.5)
+	response = dev.read()
+	print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
 
-	# command = set_starttest_command + checksum.get(set_starttest_command)
-	# dev.write(command)
-	# if res_class == 'GPIBInstrument':
-	# 	dev.wait_for_srq()
-	# else:
-	# 	time.sleep(2.5)
-	# response = dev.read()
-	# print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
+	command = set_starttest_command + checksum.get(set_starttest_command)
+	dev.write(command)
+	if res_class == 'GPIBInstrument':
+		dev.wait_for_srq(200000)
+	else:
+		time.sleep(2.5)
+	response = dev.read()
+	print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
 
 
 	inp = input("Enter drücken zum Beenden!")
@@ -123,13 +124,28 @@ def main():
 	tri = Trigger (manuell(1) oder automatisch(0))
 	I = Strombegrenzung
 	"""
-def getImpulse_2b(parameters = {'Ub':135, 'Ua1':565, 't1':1, 't6':1, 'td':2000, 'Int':1, 'n':10, 'tri': 0, 'I':10, 'step':2000, 'stop':2000}):
+def getImpulse_2b(parameters = {'Ub':(135, True, {'limits':[0.0, 60.0], 'conversation':10}), 
+								'Ua1':(565, True, {'limits':[0.0, 60.0], 'conversation':10}), 
+								't1':(1, True, {'limits':[0.1, 99.9], 'conversation':10}),  
+								't6':(1	, True, {'limits':[1, 999], 'conversation':1}), 
+								'td':(2000, True, {'limits':[5, 9999], 'conversation':1} ),
+								'Int':(1, True, {'limits': [1, 999], 'conversation':10}), 
+								'n':(10, True, {'limits': [1, 30000], 'conversation':1}),
+								'tri':(0, False, {'limits': [0, 1], 'conversation':1}), 
+								'I':(10, False, {'limits': [1, 30], 'conversation':1}), 
+								'step':(2000, False, {'limits': [5, 9999], 'conversation':1}), 
+								'stop':(2000, False, {'limits':[5, 9999], 'conversation':1})
+								}):
+
 	set_impulse2b_command = 'DA,Ub,Ua1,t1,t6,td,Int,n,tri,I,step,stop;'
 	command = str()
 
 	for key in parameters:
-		set_impulse2b_command = set_impulse2b_command.replace(key, str(parameters[key]))
-
+		if (parameters[key][1]):
+			val = input('Eingabe von Parameter {0:s} (max: {1:4.2f}, min: {2:4.2f}, default: {3:4.2f}):'
+				.format(key, parameters[key][2]['limits'][0], parameters[key][2]['limits'][1], parameters[key][0]))
+			
+			print(parameters[key][0])
 	return set_impulse2b_command
 
 
@@ -157,7 +173,7 @@ def impulseSelection():
 		print("{0:d}) {1:s}".format(count, pulse))
 		count = count + 1;
 
-	selection = int(input('Funktion auswählen: '))
+	selection = int(input('Funktion auswaehlen: '))
 
 	while selection < 0 and selection > len(pulses) and not selection == 200:
 		print('Bitte einen Wert zwischen 1 und {0:d} eingeben (200 Beenden).'.format(len(pulses)))
