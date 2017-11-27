@@ -86,13 +86,14 @@ def main():
 	nextFunction = impulseSelection()
 
 	command = nextFunction()
-	command = command + checksum.get(command) + set_starttest_command + checksum.get(set_starttest_command)
+	command = command + checksum.get(command)
 	dev.write(command)
 	if res_class == 'GPIBInstrument':
-		dev.wait_for_srq()
+		#dev.wait_for_srq()
+		pass
 	else:
 		time.sleep(2.5)
-	response = dev.read()
+	#response = dev.read()
 	print("{req:31} {res:50}".format(req=command, res=response.replace('\n','')))
 
 	command = set_starttest_command + checksum.get(set_starttest_command)
@@ -124,28 +125,36 @@ def main():
 	tri = Trigger (manuell(1) oder automatisch(0))
 	I = Strombegrenzung
 	"""
-def getImpulse_2b(parameters = {'Ub':(135, True, {'limits':[0.0, 60.0], 'conversation':10}), 
-								'Ua1':(565, True, {'limits':[0.0, 60.0], 'conversation':10}), 
-								't1':(1, True, {'limits':[0.1, 99.9], 'conversation':10}),  
-								't6':(1	, True, {'limits':[1, 999], 'conversation':1}), 
-								'td':(2000, True, {'limits':[5, 9999], 'conversation':1} ),
-								'Int':(1, True, {'limits': [1, 999], 'conversation':10}), 
-								'n':(10, True, {'limits': [1, 30000], 'conversation':1}),
-								'tri':(0, False, {'limits': [0, 1], 'conversation':1}), 
-								'I':(10, False, {'limits': [1, 30], 'conversation':1}), 
-								'step':(2000, False, {'limits': [5, 9999], 'conversation':1}), 
-								'stop':(2000, False, {'limits':[5, 9999], 'conversation':1})
+def getImpulse_2b(parameters = {'Ub':(135, True, {'limits':[0.0, 60.0], 'conversation': (lambda x,y: y * 10)}, 'Ub'), 
+								'Us':(100, True, {'limits':[0.0, 60.0], 'conversation': (lambda x,y: (600 - x['Ub'][0]) + (y * 10))}, 'Ua1'), 
+								't1':(1, True, {'limits':[0.1, 99.9], 'conversation':(lambda x,y: y * 10)}, 't1'),  
+								't6':(1	, True, {'limits':[1, 999], 'conversation':(lambda x,y: y * 1)}, 't6'), 
+								'td':(2000, True, {'limits':[5, 9999], 'conversation':(lambda x,y: y * 1)}, 'td' ),
+								'Int':(1, True, {'limits': [1, 999], 'conversation':(lambda x,y: y * 10)}, 'Int'), 
+								'n':(10, True, {'limits': [1, 30000], 'conversation':(lambda x,y: y * 1)}, 'n'),
+								'tri':(0, False, {'limits': [0, 1], 'conversation':(lambda x,y: y * 1)}, 'tri'), 
+								'I':(10, False, {'limits': [1, 30], 'conversation':(lambda x,y: y * 1)}, 'I'), 
+								'step':(2000, False, {'limits': [5, 9999], 'conversation':(lambda x,y: y * 1)}, 'step'), 
+								'stop':(2000, False, {'limits':[5, 9999], 'conversation':(lambda x,y: y * 1)}, 'stop')
 								}):
 
 	set_impulse2b_command = 'DA,Ub,Ua1,t1,t6,td,Int,n,tri,I,step,stop;'
 	command = str()
-
+	functions = {'Ua'}
 	for key in parameters:
 		if (parameters[key][1]):
-			val = input('Eingabe von Parameter {0:s} (max: {1:4.2f}, min: {2:4.2f}, default: {3:4.2f}):'
-				.format(key, parameters[key][2]['limits'][0], parameters[key][2]['limits'][1], parameters[key][0]))
-			
-			print(parameters[key][0])
+			val = input('Eingabe von Parameter {0:s} (max: {1:4.2f}, min: {2:4.2f}):'
+				.format(key, parameters[key][2]['limits'][1], 
+					parameters[key][2]['limits'][0]))
+			if(bool(val)):
+				val = float(val)
+				# Tuple können nicht editiert werden, aber es können neue Tupel erzeugt bzw. konkateniert werden
+				parameters[key] = (parameters[key][2]['conversation'](parameters, val), parameters[key][1]) + (parameters[key][2], parameters[key][3]) 
+				print(parameters[key])
+			else:
+				pass
+		set_impulse2b_command = set_impulse2b_command.replace(parameters[key][3], str(int(parameters[key][0])))
+
 	return set_impulse2b_command
 
 
