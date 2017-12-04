@@ -7,9 +7,13 @@ class PyVisa_Helper:
 	def selectDevice():
 		visa_rm = visa.ResourceManager()
 		visa_devlist = visa_rm.list_resources()
-
+		count = int(0)
+		
+		
 		print('Angeschlossenen Geräte'.center(100, '-'))
-		print(visa_devlist)
+		for dev in visa_devlist:
+			print('({0:d}) {1:s}\n'.format(count, dev))
+			count = count + 1
 		print(''.center(100, '-'))
 
 		# Kein Gerät gefunden
